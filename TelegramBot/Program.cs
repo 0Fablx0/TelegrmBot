@@ -6,6 +6,7 @@ using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Exceptions;
 using TelegramBot;
+using System.Collections.Generic;
 
 namespace TelegramBotExperiments
 {
@@ -15,7 +16,7 @@ namespace TelegramBotExperiments
         
 
         static ITelegramBotClient bot = new TelegramBotClient("6022966844:AAFctYwnOdvH1saR-9BBFe67PuZo0SznoQY");
-        static MathGame _game = null;
+        static ApiController _api = new ApiController();
 
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
@@ -27,39 +28,19 @@ namespace TelegramBotExperiments
 
                 if (text == "/start")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "/game - Math game");
+                    await botClient.SendTextMessageAsync(message.Chat, "Write city name");
                     return;
                 }
-                if (text == "/game")
+                else if (text !=null)
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Lets start.\n To finish - /endgame");
-                    _game = new MathGame();
-                    await botClient.SendTextMessageAsync(message.Chat, _game.getQuestion());
+                    List<string> places = await _api.getInterestingPlacesAsync(text);
+                    foreach(var x in places)
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, x);
+                    }
                     return;
                 }
-                if (_game != null)
-                {
-                    if (text == "/endgame")
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, $"Game over\nRight : {_game.right} Wrong : {_game.wrong}\nScore : {_game.right - _game.wrong}");
-                        _game = null;
-                        return;
-                    }
-                    if (text == _game.answer.ToString())
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, "True");
-                        _game.right++;
-                        await botClient.SendTextMessageAsync(message.Chat, _game.getQuestion());
-                        return;
-                    }
-                    else
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, "False");
-                        _game.wrong++;
-                        await botClient.SendTextMessageAsync(message.Chat, _game.getQuestion());
-                        return;
-                    }
-                }
+               
             }
         }
 
